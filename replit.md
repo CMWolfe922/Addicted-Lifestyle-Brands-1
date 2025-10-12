@@ -119,6 +119,51 @@ Preferred communication style: Simple, everyday language.
 - Strict TypeScript configuration
 - Source maps for debugging
 
+## Recent Changes (October 2025)
+
+### Custom Barcode Per Purchase System
+**Major update**: Each purchase now generates a unique NFT barcode (not reusing product barcode). Key features:
+
+**Inventory Management**:
+- Products have `salesCount` (tracks sold items) and `inventoryLimit` (default 500 per product)
+- Backend validates inventory before allowing purchase
+- Sales count increments atomically with each successful mint
+- Products show "sold out" state when limit reached
+
+**Unique Barcode Generation**:
+- Each transaction generates a unique 10-character barcode ID
+- Barcode is different from the product's base barcode
+- Stored in `transactions.uniqueBarcodeId` field
+- Included in NFT metadata for blockchain verification
+
+**Purchase Numbering**:
+- Each purchase receives a sequential number (1-500)
+- Stored in `transactions.purchaseNumber`
+- Displayed to customer after purchase ("Purchase 1 of 500")
+- Included in NFT metadata
+
+**NFT Metadata Structure**:
+```json
+{
+  "name": "Product Name",
+  "barcode": "UNIQUE10CH", // Unique per purchase
+  "productId": "uuid",
+  "purchaseNumber": 1 // 1-500
+}
+```
+
+**Frontend Updates**:
+- Product cards display inventory status (e.g., "498 of 500 available")
+- "Sold Out" badge appears when inventory depleted
+- Purchase button disabled when out of stock
+- Purchase dialog shows unique barcode and purchase number after successful mint
+- Admin dashboard shows inventory metrics (items available, sold/total ratio)
+
+**Backend Improvements**:
+- Ripple service maintains persistent connection for better reliability
+- Purchase endpoint validates inventory and rolls back on failures
+- Better error messages for user-facing errors
+
 ## External Dependencies
 
 ### Blockchain Services
@@ -128,6 +173,7 @@ Preferred communication style: Simple, everyday language.
 ### Database & Storage
 - **Neon Serverless PostgreSQL**: Configured via DATABASE_URL environment variable
 - **Drizzle ORM**: Type-safe database queries and migrations
+- **MemStorage**: In-memory storage for development (tracks inventory and sales)
 
 ### UI Component Libraries
 - **Radix UI**: 20+ primitive components for accessible, unstyled UI building blocks
@@ -155,4 +201,4 @@ The application currently uses:
 - Ripple Testnet (needs mainnet configuration)
 - In-memory file storage (needs cloud storage like S3/Cloudinary)
 - Basic wallet management (needs proper key management service)
-- MemStorage fallback (database implementation ready but may need activation)
+- MemStorage for development (database implementation ready but may need activation)
