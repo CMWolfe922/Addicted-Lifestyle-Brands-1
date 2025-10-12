@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import bcrypt from "bcrypt";
+import session from "express-session";
 import { storage } from "./storage";
 import { rippleService } from "./ripple-service";
 import { insertProductSchema, insertTransactionSchema, insertCustomerSchema, insertEmployeeSchema } from "@shared/schema";
@@ -11,12 +12,26 @@ import { requireAdminAuth, verifyAdminPassword } from "./admin-auth";
 declare module "express-session" {
   interface SessionData {
     customerId?: string;
+    isAdminAuthenticated?: boolean;
   }
 }
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure session middleware
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "fallback-secret-change-in-production",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      },
+    })
+  );
   
   // Get all products
   app.get("/api/products", async (req, res) => {

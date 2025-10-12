@@ -121,6 +121,39 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 2025)
 
+### Customer Authentication & Registration System
+**New feature**: Customers must now register and login before making purchases. The system securely manages customer accounts with the following features:
+
+**Customer Registration:**
+- Registration dialog appears automatically for first-time visitors
+- Required fields: name, email, password, wallet address
+- Password security with bcrypt hashing (10 salt rounds)
+- Email uniqueness enforced at schema level
+- Session-based authentication with 7-day cookie expiration
+
+**Authentication Flow:**
+- POST `/api/customer/register` - creates account, hashes password, establishes session
+- POST `/api/customer/login` - validates credentials, creates session
+- GET `/api/customer/me` - returns authenticated customer (without password)
+- POST `/api/customer/logout` - destroys session
+
+**Session Management:**
+- Express-session middleware with SESSION_SECRET
+- Cookie settings: httpOnly, secure in production, 7-day maxAge
+- All auth requests include `credentials: 'include'` for cookie persistence
+- Session stores both customerId and isAdminAuthenticated
+
+**Purchase Integration:**
+- Purchase dialog auto-fills wallet address from logged-in customer
+- Authentication check prevents unauthorized purchases
+- Customer data persists across page refreshes via session cookie
+
+**Security Features:**
+- Passwords never stored in plain text (bcrypt hashing)
+- Password field excluded from all API responses
+- HttpOnly cookies prevent XSS attacks
+- Session secret from environment variable
+
 ### Custom Barcode Per Purchase System
 **Major update**: Each purchase now generates a unique NFT barcode (not reusing product barcode). Key features:
 
