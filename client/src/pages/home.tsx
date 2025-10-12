@@ -94,6 +94,8 @@ export default function Home() {
                   image={product.imageUrl}
                   nftStatus={product.nftStatus as "available" | "minted" | "pending"}
                   barcodeId={product.barcodeId}
+                  salesCount={product.salesCount}
+                  inventoryLimit={product.inventoryLimit}
                   onPurchase={() => handlePurchaseClick(product)}
                 />
               ))}

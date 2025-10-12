@@ -42,7 +42,11 @@ export function PurchaseDialog({ product, open, onOpenChange }: PurchaseDialogPr
       return response.json();
     },
     onSuccess: (data) => {
-      setNftData(data.nft);
+      setNftData({
+        ...data.nft,
+        uniqueBarcodeId: data.uniqueBarcodeId,
+        purchaseNumber: data.purchaseNumber
+      });
       setPurchaseComplete(true);
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     },
@@ -82,6 +86,18 @@ export function PurchaseDialog({ product, open, onOpenChange }: PurchaseDialogPr
             
             <div className="bg-muted rounded-md p-4 space-y-3 text-left mb-6">
               <div>
+                <p className="text-xs text-muted-foreground mb-1">Unique Barcode ID</p>
+                <p className="font-mono text-sm break-all" data-testid="text-unique-barcode">
+                  #{nftData?.uniqueBarcodeId || "Pending..."}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Purchase Number</p>
+                <p className="font-mono text-sm" data-testid="text-purchase-number">
+                  {nftData?.purchaseNumber ? `${nftData.purchaseNumber} of 500` : "Pending..."}
+                </p>
+              </div>
+              <div>
                 <p className="text-xs text-muted-foreground mb-1">Token ID</p>
                 <p className="font-mono text-sm break-all" data-testid="text-token-id">
                   {nftData?.tokenId || "Pending..."}
@@ -115,17 +131,23 @@ export function PurchaseDialog({ product, open, onOpenChange }: PurchaseDialogPr
             </DialogHeader>
 
             <form onSubmit={handlePurchase} className="space-y-6 mt-4">
-              <div className="bg-muted rounded-md p-4">
-                <div className="flex items-center justify-between mb-2">
+              <div className="bg-muted rounded-md p-4 space-y-2">
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Price</span>
                   <span className="text-lg font-display font-bold" data-testid="text-purchase-price">
                     {product.price} XRP
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">NFT Barcode</span>
+                  <span className="text-sm text-muted-foreground">Product Barcode</span>
                   <span className="font-mono text-sm" data-testid="text-purchase-barcode">
                     #{product.barcodeId}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Available</span>
+                  <span className="text-sm" data-testid="text-purchase-availability">
+                    {parseInt(product.inventoryLimit || "500") - parseInt(product.salesCount || "0")} of {product.inventoryLimit || "500"}
                   </span>
                 </div>
               </div>
