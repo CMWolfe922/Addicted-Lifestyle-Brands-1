@@ -7,6 +7,12 @@ import {
   type InsertTransaction,
   type Customer,
   type InsertCustomer,
+  type Wallet,
+  type InsertWallet,
+  type LinkedWallet,
+  type InsertLinkedWallet,
+  type ConversionTransaction,
+  type InsertConversionTransaction,
   type Employee,
   type InsertEmployee 
 } from "@shared/schema";
@@ -38,11 +44,30 @@ export interface IStorage {
   // Customer operations
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   getCustomer(id: string): Promise<Customer | undefined>;
-  getCustomerByWallet(walletAddress: string): Promise<Customer | undefined>;
   getCustomerByEmail(email: string): Promise<Customer | undefined>;
   getAllCustomers(): Promise<Customer[]>;
   updateCustomer(id: string, updates: Partial<Customer>): Promise<void>;
   deleteCustomer(id: string): Promise<void>;
+
+  // Wallet operations
+  createWallet(wallet: InsertWallet): Promise<Wallet>;
+  getWallet(id: string): Promise<Wallet | undefined>;
+  getWalletByCustomerId(customerId: string): Promise<Wallet | undefined>;
+  getWalletByXrpAddress(xrpAddress: string): Promise<Wallet | undefined>;
+  updateWallet(id: string, updates: Partial<Wallet>): Promise<void>;
+  markSeedPhraseShown(id: string): Promise<void>;
+
+  // Linked Wallet operations
+  createLinkedWallet(wallet: InsertLinkedWallet): Promise<LinkedWallet>;
+  getLinkedWallet(id: string): Promise<LinkedWallet | undefined>;
+  getLinkedWalletsByCustomerId(customerId: string): Promise<LinkedWallet[]>;
+  deleteLinkedWallet(id: string): Promise<void>;
+
+  // Conversion Transaction operations
+  createConversionTransaction(transaction: InsertConversionTransaction): Promise<ConversionTransaction>;
+  getConversionTransaction(id: string): Promise<ConversionTransaction | undefined>;
+  getConversionTransactionsByCustomerId(customerId: string): Promise<ConversionTransaction[]>;
+  updateConversionTransaction(id: string, updates: Partial<ConversionTransaction>): Promise<void>;
 
   // Employee operations
   createEmployee(employee: InsertEmployee): Promise<Employee>;
@@ -57,6 +82,9 @@ export class MemStorage implements IStorage {
   private nfts: Map<string, NFT>;
   private transactions: Map<string, Transaction>;
   private customers: Map<string, Customer>;
+  private wallets: Map<string, Wallet>;
+  private linkedWallets: Map<string, LinkedWallet>;
+  private conversionTransactions: Map<string, ConversionTransaction>;
   private employees: Map<string, Employee>;
 
   constructor() {
@@ -64,6 +92,9 @@ export class MemStorage implements IStorage {
     this.nfts = new Map();
     this.transactions = new Map();
     this.customers = new Map();
+    this.wallets = new Map();
+    this.linkedWallets = new Map();
+    this.conversionTransactions = new Map();
     this.employees = new Map();
   }
 
@@ -204,11 +235,8 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const customer: Customer = {
       ...insertCustomer,
-      email: insertCustomer.email ?? null,
-      name: insertCustomer.name ?? null,
-      password: insertCustomer.password ?? null,
-      totalPurchases: insertCustomer.totalPurchases ?? "0",
-      totalSpent: insertCustomer.totalSpent ?? "0",
+      totalPurchases: "0",
+      totalSpent: "0",
       id,
       createdAt: new Date()
     };
@@ -226,12 +254,6 @@ export class MemStorage implements IStorage {
     return this.customers.get(id);
   }
 
-  async getCustomerByWallet(walletAddress: string): Promise<Customer | undefined> {
-    return Array.from(this.customers.values()).find(
-      (customer) => customer.walletAddress === walletAddress
-    );
-  }
-
   async getAllCustomers(): Promise<Customer[]> {
     return Array.from(this.customers.values());
   }
@@ -246,6 +268,110 @@ export class MemStorage implements IStorage {
 
   async deleteCustomer(id: string): Promise<void> {
     this.customers.delete(id);
+  }
+
+  // Wallet operations
+  async createWallet(insertWallet: InsertWallet): Promise<Wallet> {
+    const id = randomUUID();
+    const wallet: Wallet = {
+      ...insertWallet,
+      seedPhraseShown: null,
+      id,
+      createdAt: new Date()
+    };
+    this.wallets.set(id, wallet);
+    return wallet;
+  }
+
+  async getWallet(id: string): Promise<Wallet | undefined> {
+    return this.wallets.get(id);
+  }
+
+  async getWalletByCustomerId(customerId: string): Promise<Wallet | undefined> {
+    return Array.from(this.wallets.values()).find(
+      (wallet) => wallet.customerId === customerId
+    );
+  }
+
+  async getWalletByXrpAddress(xrpAddress: string): Promise<Wallet | undefined> {
+    return Array.from(this.wallets.values()).find(
+      (wallet) => wallet.xrpAddress === xrpAddress
+    );
+  }
+
+  async updateWallet(id: string, updates: Partial<Wallet>): Promise<void> {
+    const wallet = this.wallets.get(id);
+    if (wallet) {
+      Object.assign(wallet, updates);
+      this.wallets.set(id, wallet);
+    }
+  }
+
+  async markSeedPhraseShown(id: string): Promise<void> {
+    const wallet = this.wallets.get(id);
+    if (wallet) {
+      wallet.seedPhraseShown = new Date();
+      this.wallets.set(id, wallet);
+    }
+  }
+
+  // Linked Wallet operations
+  async createLinkedWallet(insertLinkedWallet: InsertLinkedWallet): Promise<LinkedWallet> {
+    const id = randomUUID();
+    const linkedWallet: LinkedWallet = {
+      ...insertLinkedWallet,
+      label: insertLinkedWallet.label ?? null,
+      id,
+      createdAt: new Date()
+    };
+    this.linkedWallets.set(id, linkedWallet);
+    return linkedWallet;
+  }
+
+  async getLinkedWallet(id: string): Promise<LinkedWallet | undefined> {
+    return this.linkedWallets.get(id);
+  }
+
+  async getLinkedWalletsByCustomerId(customerId: string): Promise<LinkedWallet[]> {
+    return Array.from(this.linkedWallets.values()).filter(
+      (wallet) => wallet.customerId === customerId
+    );
+  }
+
+  async deleteLinkedWallet(id: string): Promise<void> {
+    this.linkedWallets.delete(id);
+  }
+
+  // Conversion Transaction operations
+  async createConversionTransaction(insertConversion: InsertConversionTransaction): Promise<ConversionTransaction> {
+    const id = randomUUID();
+    const conversion: ConversionTransaction = {
+      ...insertConversion,
+      status: insertConversion.status ?? "pending",
+      externalTxId: insertConversion.externalTxId ?? null,
+      id,
+      createdAt: new Date()
+    };
+    this.conversionTransactions.set(id, conversion);
+    return conversion;
+  }
+
+  async getConversionTransaction(id: string): Promise<ConversionTransaction | undefined> {
+    return this.conversionTransactions.get(id);
+  }
+
+  async getConversionTransactionsByCustomerId(customerId: string): Promise<ConversionTransaction[]> {
+    return Array.from(this.conversionTransactions.values()).filter(
+      (tx) => tx.customerId === customerId
+    );
+  }
+
+  async updateConversionTransaction(id: string, updates: Partial<ConversionTransaction>): Promise<void> {
+    const conversion = this.conversionTransactions.get(id);
+    if (conversion) {
+      Object.assign(conversion, updates);
+      this.conversionTransactions.set(id, conversion);
+    }
   }
 
   // Employee operations

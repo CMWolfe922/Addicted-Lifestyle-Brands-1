@@ -41,12 +41,41 @@ export const transactions = pgTable("transactions", {
 
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  walletAddress: text("wallet_address").notNull().unique(),
-  email: text("email").unique(),
-  name: text("name"),
-  password: text("password"),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  password: text("password").notNull(),
   totalPurchases: numeric("total_purchases", { precision: 10, scale: 0 }).notNull().default("0"),
   totalSpent: numeric("total_spent", { precision: 10, scale: 2 }).notNull().default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const wallets = pgTable("wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => customers.id),
+  xrpAddress: text("xrp_address").notNull().unique(),
+  encryptedSeedPhrase: text("encrypted_seed_phrase").notNull(),
+  seedPhraseShown: timestamp("seed_phrase_shown"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const linkedWallets = pgTable("linked_wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => customers.id),
+  currency: text("currency").notNull(),
+  address: text("address").notNull(),
+  label: text("label"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const conversionTransactions = pgTable("conversion_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => customers.id),
+  fromCurrency: text("from_currency").notNull(),
+  toCurrency: text("to_currency").notNull(),
+  amount: numeric("amount", { precision: 20, scale: 8 }).notNull(),
+  rate: numeric("rate", { precision: 20, scale: 8 }).notNull(),
+  status: text("status").notNull().default("pending"),
+  externalTxId: text("external_tx_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -78,6 +107,24 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   createdAt: true,
+  totalPurchases: true,
+  totalSpent: true,
+});
+
+export const insertWalletSchema = createInsertSchema(wallets).omit({
+  id: true,
+  createdAt: true,
+  seedPhraseShown: true,
+});
+
+export const insertLinkedWalletSchema = createInsertSchema(linkedWallets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertConversionTransactionSchema = createInsertSchema(conversionTransactions).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
@@ -97,6 +144,15 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+
+export type LinkedWallet = typeof linkedWallets.$inferSelect;
+export type InsertLinkedWallet = z.infer<typeof insertLinkedWalletSchema>;
+
+export type ConversionTransaction = typeof conversionTransactions.$inferSelect;
+export type InsertConversionTransaction = z.infer<typeof insertConversionTransactionSchema>;
 
 export type Employee = typeof employees.$inferSelect;
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;

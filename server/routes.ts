@@ -349,10 +349,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer authentication
   app.post("/api/customer/register", async (req, res) => {
     try {
-      const { email, password, name, walletAddress } = req.body;
+      const { email, password, name } = req.body;
 
-      if (!email || !password || !walletAddress) {
-        return res.status(400).json({ error: "Email, password, and wallet address required" });
+      if (!email || !password || !name) {
+        return res.status(400).json({ error: "Email, password, and name required" });
       }
 
       // Check if customer already exists
@@ -368,16 +368,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customer = await storage.createCustomer({
         email,
         password: hashedPassword,
-        name: name || null,
-        walletAddress,
+        name,
+      });
+
+      // Generate XRP wallet
+      const { WalletService } = await import("./wallet-service.js");
+      const generatedWallet = WalletService.generateWallet();
+
+      // Store wallet
+      const wallet = await storage.createWallet({
+        customerId: customer.id,
+        xrpAddress: generatedWallet.xrpAddress,
+        encryptedSeedPhrase: generatedWallet.encryptedSeedPhrase,
       });
 
       // Store customer ID in session
       req.session.customerId = customer.id;
 
-      // Return customer without password
+      // Return customer data with wallet and seed phrase (ONLY TIME WE SHOW SEED PHRASE)
       const { password: _, ...customerData } = customer;
-      res.json(customerData);
+      res.json({
+        ...customerData,
+        wallet: {
+          xrpAddress: wallet.xrpAddress,
+          seedPhrase: generatedWallet.seedPhrase, // Show only once!
+        }
+      });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -423,8 +439,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ authenticated: false });
       }
 
+      // Get customer's wallet
+      const wallet = await storage.getWalletByCustomerId(customer.id);
+
       const { password: _, ...customerData } = customer;
-      res.json({ authenticated: true, customer: customerData });
+      res.json({ 
+        authenticated: true, 
+        customer: {
+          ...customerData,
+          xrpAddress: wallet?.xrpAddress || null,
+        }
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to get customer data" });
     }
