@@ -12,17 +12,17 @@ export class WalletService {
   private static readonly ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY || "default-development-key-change-in-production";
 
   static generateWallet(): GeneratedWallet {
-    // Generate 24-word BIP39 mnemonic
+    // Generate 24-word BIP39 mnemonic for user-friendly backup
     const mnemonic = bip39.generateMnemonic(256);
     
-    // Generate XRP wallet from entropy
+    // Generate XRP wallet using ripple-keypairs with entropy from BIP39 seed
     const seed = bip39.mnemonicToSeedSync(mnemonic);
     const entropy = seed.slice(0, 16); // Use first 16 bytes as entropy
     
-    // Generate keypair using ripple-keypairs
-    const keypair = rippleKeypairs.generateSeed({ entropy });
-    const derivedKeypair = rippleKeypairs.deriveKeypair(keypair);
-    const xrpAddress = rippleKeypairs.deriveAddress(derivedKeypair.publicKey);
+    // Generate XRP seed and derive keypair
+    const xrpSeed = rippleKeypairs.generateSeed({ entropy: entropy });
+    const keypair = rippleKeypairs.deriveKeypair(xrpSeed);
+    const xrpAddress = rippleKeypairs.deriveAddress(keypair.publicKey);
     
     const encryptedSeedPhrase = this.encryptSeedPhrase(mnemonic);
 
