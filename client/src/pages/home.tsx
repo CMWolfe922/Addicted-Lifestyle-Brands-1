@@ -177,7 +177,7 @@ export default function Home() {
               <p className="text-sm sm:text-base text-muted-foreground">No products available yet. Visit the admin page to add products.</p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -189,6 +189,8 @@ export default function Home() {
                   barcodeId={product.barcodeId}
                   salesCount={product.salesCount}
                   inventoryLimit={product.inventoryLimit}
+                  levelRequired={product.levelRequired}
+                  customerLevel={customerAuth?.customer?.level}
                   onPurchase={() => handlePurchaseClick(product)}
                 />
               ))}

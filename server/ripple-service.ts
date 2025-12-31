@@ -145,6 +145,13 @@ export class RippleService {
     }
   }
 
+  getIssuerAddress(): string {
+    if (!this.wallet) {
+      return "Not initialized";
+    }
+    return this.wallet.address;
+  }
+
   async getNetworkStatus(): Promise<boolean> {
     try {
       await this.connect();

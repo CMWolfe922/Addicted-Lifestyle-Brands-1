@@ -11,6 +11,11 @@ export type CustomerAuthResponse = AuthStatusResponse & {
     name: string;
     totalPurchases: string;
     totalSpent: string;
+    points: string;
+    level: string;
+    followersCount: string;
+    followingCount: string;
+    level100RewardClaimed: Date | null;
     walletAddress: string | null;
   };
 };
