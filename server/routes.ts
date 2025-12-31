@@ -66,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create product (admin)
-  app.post("/api/products", upload.single("image"), async (req, res) => {
+  app.post("/api/products", requireAdminAuth, upload.single("image"), async (req, res) => {
     try {
       const data = JSON.parse(req.body.data || "{}");
       
@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all transactions (admin)
-  app.get("/api/transactions", async (req, res) => {
+  app.get("/api/transactions", requireAdminAuth, async (req, res) => {
     try {
       const transactions = await storage.getAllTransactions();
       res.json(transactions);
@@ -420,8 +420,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate barcode ID
-  app.post("/api/barcode/generate", (req, res) => {
+  // Generate barcode ID (admin only)
+  app.post("/api/barcode/generate", requireAdminAuth, (req, res) => {
     const randomId = Math.random().toString(36).substring(2, 12).toUpperCase();
     res.json({ barcodeId: randomId });
   });
@@ -775,15 +775,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true });
   });
 
-  // Get all customers (for displaying post authors)
-  app.get("/api/customers", async (req, res) => {
+  // Get public customer profiles (for displaying post authors)
+  app.get("/api/customers/public", async (req, res) => {
     try {
       const customers = await storage.getAllCustomers();
-      // Remove passwords from response
-      const sanitized = customers.map(({ password, ...rest }) => rest);
-      res.json(sanitized);
+      // Only return public profile data - no email, address, or private info
+      const publicProfiles = customers.map((customer) => ({
+        id: customer.id,
+        name: customer.name,
+        level: customer.level,
+        points: customer.points,
+        followersCount: customer.followersCount,
+        followingCount: customer.followingCount,
+      }));
+      res.json(publicProfiles);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch customers" });
+      res.status(500).json({ error: "Failed to fetch customer profiles" });
     }
   });
 

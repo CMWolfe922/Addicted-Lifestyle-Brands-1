@@ -17,9 +17,9 @@ export default function Feed() {
     queryKey: ["/api/customer/me"],
   });
 
-  // Fetch all customers for post authors
+  // Fetch public customer profiles for post authors
   const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
+    queryKey: ["/api/customers/public"],
   });
 
   const { data: communityPosts = [], isLoading: isLoadingCommunity } = useQuery<Post[]>({
