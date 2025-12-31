@@ -101,14 +101,17 @@ class EmailService {
               </div>
 
               <div class="instructions">
-                <h3>📱 How to Add Your NFT to Your Wallet</h3>
+                <h3>🎁 How to Claim Your NFT</h3>
+                <p><strong>Your NFT is ready and waiting for you!</strong></p>
+                <p>The NFT is currently held in our secure company wallet. When you're ready to claim it:</p>
                 <ol>
-                  <li>Open your XRP-compatible wallet (e.g., XUMM, Crossmark)</li>
-                  <li>Navigate to the "Add NFT" or "Import NFT" section</li>
-                  <li>Enter the Token ID shown above</li>
-                  <li>Confirm the transaction to add the NFT to your wallet</li>
+                  <li>Contact us at support@nftstreetw ear.com with your Token ID</li>
+                  <li>Provide your XRP wallet address</li>
+                  <li>We'll transfer the NFT to your wallet within 24 hours</li>
+                  <li>OR scan the QR code on your ${data.productName} to verify and claim</li>
                 </ol>
-                <p><strong>Note:</strong> This NFT will also be printed on the left sleeve of your ${data.productName}!</p>
+                <p><strong>Why wait to claim?</strong> You can verify the NFT's authenticity anytime by scanning the QR code printed on your product's left sleeve, or by visiting our verification page.</p>
+                <p><strong>Keep this email safe!</strong> It contains your unique NFT Token ID needed for claiming.</p>
               </div>
 
               <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>

@@ -14,17 +14,11 @@ class QRCodeGenerator {
    */
   async generateNFTQRCode(data: NFTQRData): Promise<string> {
     try {
-      // Create a JSON payload with NFT information
-      const qrPayload = JSON.stringify({
-        type: "NFT",
-        tokenId: data.tokenId,
-        issuer: data.issuer,
-        wallet: data.walletAddress,
-        network: "XRP Ledger",
-      });
+      // Create a verification URL that users can scan to verify authenticity
+      const verificationUrl = `${process.env.PUBLIC_URL || 'http://localhost:5001'}/verify/${data.tokenId}`;
 
       // Generate QR code as data URL (base64 encoded PNG)
-      const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
+      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
         errorCorrectionLevel: "H", // High error correction
         type: "image/png",
         width: 512, // High resolution for printing
@@ -49,15 +43,10 @@ class QRCodeGenerator {
    */
   async generateNFTQRCodeBuffer(data: NFTQRData): Promise<Buffer> {
     try {
-      const qrPayload = JSON.stringify({
-        type: "NFT",
-        tokenId: data.tokenId,
-        issuer: data.issuer,
-        wallet: data.walletAddress,
-        network: "XRP Ledger",
-      });
+      // Create a verification URL that users can scan to verify authenticity
+      const verificationUrl = `${process.env.PUBLIC_URL || 'http://localhost:5001'}/verify/${data.tokenId}`;
 
-      const qrCodeBuffer = await QRCode.toBuffer(qrPayload, {
+      const qrCodeBuffer = await QRCode.toBuffer(verificationUrl, {
         errorCorrectionLevel: "H",
         type: "png",
         width: 512,

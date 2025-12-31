@@ -146,12 +146,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "pending"
       });
 
-      // Mint NFT on Ripple with unique barcode
+      // Get customer details for NFT metadata
+      const customer = req.session.customerId
+        ? await storage.getCustomer(req.session.customerId)
+        : null;
+
+      // Get current sales count for this product
+      const currentSalesCount = parseInt(product.salesCount) || 0;
+
+      // Mint NFT on Ripple with enhanced metadata
       const mintResult = await rippleService.mintNFT({
         barcodeId: uniqueBarcodeId,
         productName: product.name,
         productId: product.id,
-        purchaseNumber
+        purchaseNumber,
+        totalSold: currentSalesCount + 1,
+        collectionName: "NFT Streetwear Collection",
+        customerName: customer?.name || "Anonymous",
+        customerWallet: buyerWallet,
       });
 
       if (mintResult.success) {
@@ -339,6 +351,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ connected: isConnected });
     } catch (error) {
       res.json({ connected: false });
+    }
+  });
+
+  // NFT Verification - Public endpoint
+  app.get("/api/nft/verify/:tokenId", async (req, res) => {
+    try {
+      const { tokenId } = req.params;
+
+      if (!tokenId) {
+        return res.status(400).json({ error: "Token ID required" });
+      }
+
+      // Get NFT details from Ripple network
+      const nftDetails = await rippleService.getNFTDetails(tokenId);
+
+      if (!nftDetails.success) {
+        return res.status(404).json({
+          error: "NFT not found or invalid Token ID",
+          details: nftDetails.error
+        });
+      }
+
+      // Get product and transaction info from database
+      const nft = await storage.getNFTByTokenId(tokenId);
+      let productInfo = null;
+      let transactionInfo = null;
+
+      if (nft) {
+        const product = await storage.getProduct(nft.productId);
+        const transactions = await storage.getAllTransactions();
+        const transaction = transactions.find(t => t.nftId === nft.id);
+
+        productInfo = product ? {
+          name: product.name,
+          description: product.description,
+          imageUrl: product.imageUrl,
+        } : null;
+
+        transactionInfo = transaction ? {
+          purchaseDate: transaction.createdAt,
+          amount: transaction.amount,
+          status: transaction.status,
+        } : null;
+      }
+
+      res.json({
+        success: true,
+        verified: true,
+        nft: {
+          tokenId: nftDetails.tokenId,
+          issuer: nftDetails.issuer,
+          currentOwner: nftDetails.owner,
+          metadata: nftDetails.metadata,
+          sequence: nftDetails.sequence,
+          isTransferable: (nftDetails.flags & 8) !== 0,
+        },
+        product: productInfo,
+        transaction: transactionInfo,
+        verifiedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("NFT verification error:", error);
+      res.status(500).json({
+        error: "Verification failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

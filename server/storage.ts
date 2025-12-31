@@ -41,6 +41,7 @@ export interface IStorage {
   createNFT(nft: InsertNFT): Promise<NFT>;
   getNFT(id: string): Promise<NFT | undefined>;
   getNFTByProductId(productId: string): Promise<NFT | undefined>;
+  getNFTByTokenId(tokenId: string): Promise<NFT | undefined>;
   updateNFT(id: string, updates: Partial<NFT>): Promise<void>;
 
   // Transaction operations
@@ -252,6 +253,12 @@ export class MemStorage implements IStorage {
   async getNFTByProductId(productId: string): Promise<NFT | undefined> {
     return Array.from(this.nfts.values()).find(
       (nft) => nft.productId === productId
+    );
+  }
+
+  async getNFTByTokenId(tokenId: string): Promise<NFT | undefined> {
+    return Array.from(this.nfts.values()).find(
+      (nft) => nft.tokenId === tokenId
     );
   }
 
