@@ -3,13 +3,14 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Package, UserCog, BarChart3, Heart } from "lucide-react";
+import { LogOut, Users, Package, UserCog, BarChart3, Heart, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CustomersTab } from "@/components/admin/customers-tab";
 import { ProductsTab } from "@/components/admin/products-tab";
 import { EmployeesTab } from "@/components/admin/employees-tab";
 import { MetricsTab } from "@/components/admin/metrics-tab";
 import { EngagementTab } from "@/components/admin/engagement-tab";
+import { CouponsTab } from "@/components/admin/coupons-tab";
 import type { AuthStatusResponse } from "@/types/api";
 
 export default function AdminDashboard() {
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
 
       <main className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 overflow-y-auto">
         <Tabs defaultValue="metrics" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
             <TabsTrigger value="metrics" data-testid="tab-metrics" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Metrics</span>
@@ -90,6 +91,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="products" data-testid="tab-products" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <Package className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Products</span>
+            </TabsTrigger>
+            <TabsTrigger value="coupons" data-testid="tab-coupons" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
+              <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Coupons</span>
             </TabsTrigger>
             <TabsTrigger value="employees" data-testid="tab-employees" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <UserCog className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -111,6 +116,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="products" className="space-y-4">
             <ProductsTab />
+          </TabsContent>
+
+          <TabsContent value="coupons" className="space-y-4">
+            <CouponsTab />
           </TabsContent>
 
           <TabsContent value="employees" className="space-y-4">
