@@ -74,21 +74,21 @@ export function HeroSection({ onShopCollection, onLearnMore }: HeroSectionProps)
               <p className="text-xl sm:text-2xl font-display font-bold text-primary" data-testid="text-total-minted">
                 {nftsMinted.toLocaleString()}
               </p>
-              <p className="text-muted-foreground text-xs sm:text-sm">NFTs Minted</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Each Purchase Mints a Unique NFT</p>
             </div>
             <div className="h-6 sm:h-8 w-px bg-border" />
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-display font-bold text-primary" data-testid="text-total-owners">
                 {uniqueOwners.toLocaleString()}
               </p>
-              <p className="text-muted-foreground text-xs sm:text-sm">Unique Owners</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Verified Unique Owners</p>
             </div>
             <div className="h-6 sm:h-8 w-px bg-border" />
             <div className="text-center">
               <p className="text-xl sm:text-2xl font-display font-bold text-primary" data-testid="text-blockchain-verified">
                 {verifiedPercentage}%
               </p>
-              <p className="text-muted-foreground text-xs sm:text-sm">NFTs Verified</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Verify Your Passion</p>
             </div>
           </div>
         </div>

@@ -28,7 +28,7 @@ export function Header() {
           <Link href="/">
             <div className="flex items-center gap-1.5 sm:gap-2 hover-elevate p-1.5 sm:p-2 rounded-md -m-1.5 sm:-m-2 cursor-pointer">
               <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
-              <h1 className="font-display font-bold text-base sm:text-xl truncate" data-testid="text-app-name">NFT Streetwear</h1>
+              <h1 className="font-display font-bold text-base sm:text-xl truncate" data-testid="text-app-name">Addicted Wear</h1>
             </div>
           </Link>
 
