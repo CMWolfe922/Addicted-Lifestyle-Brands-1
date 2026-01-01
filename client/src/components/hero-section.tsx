@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 
+
 interface HeroSectionProps {
   onShopCollection?: () => void;
   onLearnMore?: () => void;
@@ -16,7 +17,7 @@ export function HeroSection({ onShopCollection, onLearnMore }: HeroSectionProps)
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
             <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-primary">Proof of Addiction™</span>
+            <span className="text-xs sm:text-sm font-medium text-primary">Verify Authentcity™</span>
           </div>
           
           <h1 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl lg:text-7xl mb-4 sm:mb-6 bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight" data-testid="text-hero-title">
