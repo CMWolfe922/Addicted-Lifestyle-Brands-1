@@ -1561,6 +1561,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // ADMIN MANAGEMENT ROUTES
+  // ============================================
+
+  // Adjust customer points
+  app.post("/api/customers/:id/adjust-points", requireAdminAuth, async (req, res) => {
+    try {
+      const { points } = req.body;
+
+      if (typeof points !== "number") {
+        return res.status(400).json({ error: "Points must be a number" });
+      }
+
+      await storage.addPoints(req.params.id, points);
+      await storage.updateCustomerLevel(req.params.id);
+
+      const updatedCustomer = await storage.getCustomer(req.params.id);
+      if (!updatedCustomer) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+
+      res.json({
+        success: true,
+        newPoints: updatedCustomer.points,
+        newLevel: updatedCustomer.level,
+      });
+    } catch (error) {
+      console.error("Error adjusting customer points:", error);
+      res.status(500).json({ error: "Failed to adjust points" });
+    }
+  });
+
+  // Resend NFT email for an order
+  app.post("/api/orders/:id/resend-email", requireAdminAuth, async (req, res) => {
+    try {
+      const transaction = await storage.getTransaction(req.params.id);
+      if (!transaction) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (transaction.status !== "completed") {
+        return res.status(400).json({ error: "Can only resend email for completed orders" });
+      }
+
+      // Find the product and customer through wallet
+      const product = await storage.getProduct(transaction.productId);
+      const wallet = await storage.getWalletByXrpAddress(transaction.buyerWallet);
+      const customer = wallet ? await storage.getCustomer(wallet.customerId) : null;
+
+      if (!customer || !wallet || !product) {
+        return res.status(404).json({ error: "Customer, wallet, or product not found" });
+      }
+
+      // Resend email
+      if (emailService && process.env.EMAIL_HOST) {
+        const dateOfPurchase = transaction.createdAt
+          ? new Date(transaction.createdAt).toLocaleDateString()
+          : new Date().toLocaleDateString();
+
+        // Generate QR code for the email
+        const qrCodeDataUrl = await qrCodeGenerator.generatePurchaseQRCode({
+          purchase_id: transaction.id,
+          customer_name: customer.name || "Customer",
+          collection_name: "NFT Streetwear Collection",
+          product_name: product.name,
+          date_of_purchase: dateOfPurchase,
+          nft_token_id: transaction.txHash || "",
+        });
+
+        await emailService.sendNFTDetails({
+          to: customer.email,
+          customerName: customer.name || "Customer",
+          productName: product.name,
+          nftTokenId: transaction.txHash || "",
+          transactionHash: transaction.txHash || "",
+          qrCodeDataUrl,
+          walletAddress: wallet.xrpAddress,
+        });
+
+        // Update email sent timestamp
+        await storage.updateTransaction(req.params.id, {
+          emailSentAt: new Date(),
+        });
+
+        res.json({ success: true, message: "Email resent successfully" });
+      } else {
+        return res.status(503).json({ error: "Email service not configured" });
+      }
+    } catch (error) {
+      console.error("Error resending order email:", error);
+      res.status(500).json({ error: "Failed to resend email" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
