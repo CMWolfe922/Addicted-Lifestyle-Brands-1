@@ -976,17 +976,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/customers", requireAdminAuth, async (_req, res) => {
     try {
       const customers = await storage.getAllCustomers();
-      const enrichedCustomers = await Promise.all(
-        customers.map(async (customer) => {
-          const wallet = await storage.getWalletByCustomerId(customer.id);
-          const { password: _pw, ...safeCustomer } = customer;
-          return {
-            ...safeCustomer,
-            walletAddress: wallet?.xrpAddress ?? null,
-          };
-        })
-      );
-      res.json(enrichedCustomers);
+      const safeCustomers = customers.map((customer) => {
+        const { password: _pw, ...safeCustomer } = customer;
+        return {
+          ...safeCustomer,
+          walletAddress: null, // Customers use PayPal, no XRP wallets
+        };
+      });
+      res.json(safeCustomers);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch customers" });
     }
@@ -1164,15 +1161,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ authenticated: false });
       }
 
-      // Get customer's wallet
-      const wallet = await storage.getWalletByCustomerId(customer.id);
-
       const { password: _, ...customerData } = customer;
       res.json({
         authenticated: true,
         customer: {
           ...customerData,
-          walletAddress: wallet?.xrpAddress ?? null,
+          walletAddress: null, // Customers use PayPal, no XRP wallets
         },
       });
     } catch (error) {
@@ -1407,16 +1401,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const total = Math.max(0, subtotal - discountAmount);
 
-      // Get or create wallet for customer
-      let wallet = await storage.getWalletByCustomerId(req.session.customerId);
-      if (!wallet) {
-        const walletData = await rippleService.createWallet();
-        wallet = await storage.createWallet({
-          customerId: req.session.customerId,
-          xrpAddress: walletData.address,
-          encryptedSeedPhrase: walletData.seed,
-        });
-      }
+      // Note: This is the legacy XRP checkout flow
+      // New purchases use PayPal via /api/products/:id/paypal/create-order
 
       const orderIds: string[] = [];
       const failedItems: string[] = [];
