@@ -198,6 +198,50 @@ class PrintfulClient {
       throw error;
     }
   }
+
+  /**
+   * Get all products from Printful catalog
+   * Returns list of products available for printing
+   */
+  async getProducts(): Promise<any> {
+    try {
+      const response = await this.request<{ code: number; result: any[] }>("/products");
+      console.log(`Fetched ${response.result.length} products from Printful catalog`);
+      return response.result;
+    } catch (error) {
+      console.error("Failed to fetch Printful products:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get store products (products you've created in your Printful store)
+   * These are your custom-configured products
+   */
+  async getStoreProducts(): Promise<any> {
+    try {
+      const response = await this.request<{ code: number; result: any[] }>("/store/products");
+      console.log(`Fetched ${response.result.length} store products from Printful`);
+      return response.result;
+    } catch (error) {
+      console.error("Failed to fetch Printful store products:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed information about a specific store product
+   * @param productId Printful store product ID
+   */
+  async getStoreProduct(productId: number): Promise<any> {
+    try {
+      const response = await this.request<{ code: number; result: any }>(`/store/products/${productId}`);
+      return response.result;
+    } catch (error) {
+      console.error(`Failed to fetch store product ${productId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const printfulClient = new PrintfulClient();

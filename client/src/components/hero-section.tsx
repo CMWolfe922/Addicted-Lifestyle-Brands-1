@@ -1,28 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { Transaction } from "@shared/schema";
 
 interface HeroSectionProps {
   onShopCollection?: () => void;
   onLearnMore?: () => void;
 }
 
+interface PublicStats {
+  nftsMinted: number;
+  uniqueOwners: number;
+  verifiedPercentage: number;
+}
+
 export function HeroSection({ onShopCollection, onLearnMore }: HeroSectionProps) {
-  // Fetch transactions to count NFTs minted
-  const { data: transactions = [] } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
+  // Fetch public stats (no auth required)
+  const { data: stats } = useQuery<PublicStats>({
+    queryKey: ["/api/stats"],
   });
 
-  // Fetch customers to count unique owners
-  const { data: customers = [] } = useQuery<{ id: string; walletAddress?: string }[]>({
-    queryKey: ["/api/customers/public"],
-  });
-
-  // Calculate stats
-  const nftsMinted = transactions.filter(t => t.status === "completed").length;
-  const uniqueOwners = customers.length;
-  const verifiedPercentage = nftsMinted > 0 ? 100 : 0;
+  const nftsMinted = stats?.nftsMinted || 0;
+  const uniqueOwners = stats?.uniqueOwners || 0;
+  const verifiedPercentage = stats?.verifiedPercentage || 0;
 
   return (
     <section className="relative overflow-hidden">

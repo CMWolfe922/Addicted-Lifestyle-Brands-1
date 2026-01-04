@@ -1,4 +1,4 @@
-import { WalletConnectButton } from "./wallet-connect-button";
+import { CustomerAuthButton } from "./customer-auth-button";
 import { ThemeToggle } from "./theme-toggle";
 import { NetworkStatus } from "./network-status";
 import { MobileMenu } from "./mobile-menu";
@@ -7,13 +7,19 @@ import { Sparkles, Settings, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
+import type { AdminAuthResponse } from "@/types/api";
 
 export function Header() {
   const [location] = useLocation();
-  
+
   const { data: networkStatus } = useQuery<{ connected: boolean }>({
     queryKey: ["/api/network/status"],
     refetchInterval: 30000,
+  });
+
+  // Check if user is admin
+  const { data: adminAuth } = useQuery<AdminAuthResponse>({
+    queryKey: ["/api/admin/me"],
   });
 
   return (
@@ -51,24 +57,27 @@ export function Header() {
               </Button>
             </div>
           </Link>
-          <Link href="/admin">
-            <div className="inline-block">
-              <Button
-                variant={location === "/admin" ? "secondary" : "ghost"}
-                size="icon"
-                data-testid="button-admin"
-                className="h-12 w-12"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            </div>
-          </Link>
+          {/* Admin button - only visible to admin users */}
+          {adminAuth?.authenticated && (
+            <Link href="/admin">
+              <div className="inline-block">
+                <Button
+                  variant={location === "/admin" ? "secondary" : "ghost"}
+                  size="icon"
+                  data-testid="button-admin"
+                  className="h-12 w-12"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </div>
+            </Link>
+          )}
           <ShoppingCart />
           {/* Desktop Theme Toggle - hidden on mobile, available in mobile menu */}
           <div className="hidden md:block">
             <ThemeToggle />
           </div>
-          <WalletConnectButton />
+          <CustomerAuthButton />
         </div>
       </div>
     </header>

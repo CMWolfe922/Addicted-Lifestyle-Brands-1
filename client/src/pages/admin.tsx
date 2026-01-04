@@ -1,4 +1,5 @@
 import { AdminUploadForm } from "@/components/admin-upload-form";
+import { PrintfulImportCard } from "@/components/admin/printful-import-card";
 import { StatsCard } from "@/components/stats-card";
 import { Package, ShoppingBag, TrendingUp, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,6 +110,10 @@ export default function Admin() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        <div className="mb-6 sm:mb-8">
+          <PrintfulImportCard />
         </div>
       </div>
     </div>
