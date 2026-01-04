@@ -29,6 +29,9 @@ declare module "express-session" {
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Trust proxy - required for secure cookies behind Render's reverse proxy
+  app.set('trust proxy', 1);
+
   // Configure session middleware
   app.use(
     session({
@@ -1111,12 +1114,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name,
       });
 
-      // Store customer ID in session
+      // Store customer ID in session and save explicitly
       req.session.customerId = customer.id;
 
-      // Return customer data (no wallet generation - customers use PayPal for payments)
-      const { password: _, ...customerData } = customer;
-      res.json(customerData);
+      // Save session before sending response (ensures cookie is set)
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Session creation failed" });
+        }
+
+        // Return customer data (no wallet generation - customers use PayPal for payments)
+        const { password: _, ...customerData } = customer;
+        res.json(customerData);
+      });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -1141,10 +1152,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
+      // Store customer ID in session and save explicitly
       req.session.customerId = customer.id;
 
-      const { password: _, ...customerData } = customer;
-      res.json(customerData);
+      // Save session before sending response (ensures cookie is set)
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Session creation failed" });
+        }
+
+        const { password: _, ...customerData } = customer;
+        res.json(customerData);
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
