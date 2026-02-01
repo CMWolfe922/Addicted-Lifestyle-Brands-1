@@ -299,7 +299,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         qrCodeDataUrl: purchaseQRCode,
       });
 
-      await storage.updateTransactionEmailSent(transaction.id);
+      await storage.updateTransaction(transaction.id, {
+        emailSent: new Date(),
+      });
 
       // Award points if customer is logged in
       if (customer) {
@@ -1424,6 +1426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Note: This is the legacy XRP checkout flow
       // New purchases use PayPal via /api/products/:id/paypal/create-order
+      // For legacy compatibility, we'll create a placeholder wallet reference
+      const wallet = { xrpAddress: "legacy-checkout-placeholder" };
 
       const orderIds: string[] = [];
       const failedItems: string[] = [];

@@ -23,3 +23,14 @@ export type CustomerAuthResponse = AuthStatusResponse & {
 export type AdminCustomer = Omit<Customer, "password"> & {
   walletAddress: string | null;
 };
+
+export type AdminAuthResponse = AuthStatusResponse & {
+  admin?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    department: string;
+    hiredAt: Date;
+  };
+};
