@@ -20,7 +20,7 @@ export type CustomerAuthResponse = AuthStatusResponse & {
   };
 };
 
-export type AdminCustomer = Omit<Customer, "password"> & {
+export type AdminCustomer = Omit<Customer, "password" | "encryptedSeedPhrase"> & {
   walletAddress: string | null;
 };
 

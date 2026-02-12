@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Wallet } from "lucide-react";
 
 interface CustomerRegisterDialogProps {
   open: boolean;
@@ -23,6 +23,8 @@ export function CustomerRegisterDialog({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [seedPhrase, setSeedPhrase] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const { toast } = useToast();
 
   const registerMutation = useMutation({
@@ -41,11 +43,16 @@ export function CustomerRegisterDialog({
 
       return res.json();
     },
-    onSuccess: () => {
-      onSuccess();
-      setName("");
-      setEmail("");
-      setPassword("");
+    onSuccess: (data) => {
+      if (data.seedPhrase) {
+        setSeedPhrase(data.seedPhrase);
+        setWalletAddress(data.walletAddress);
+      } else {
+        onSuccess();
+        setName("");
+        setEmail("");
+        setPassword("");
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -69,13 +76,87 @@ export function CustomerRegisterDialog({
     registerMutation.mutate();
   };
 
+  const handleCopySeedPhrase = () => {
+    if (seedPhrase) {
+      navigator.clipboard.writeText(seedPhrase);
+      toast({
+        title: "Copied!",
+        description: "Seed phrase copied to clipboard. Store it securely!",
+      });
+    }
+  };
+
+  const handleSeedPhraseSaved = () => {
+    setSeedPhrase(null);
+    setWalletAddress(null);
+    setName("");
+    setEmail("");
+    setPassword("");
+    onSuccess();
+  };
+
+  // Show seed phrase after successful registration
+  if (seedPhrase) {
+    return (
+      <Dialog open={open} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-primary" />
+              Your Ripple Wallet
+            </DialogTitle>
+            <DialogDescription>
+              A Ripple (XRP) wallet has been created for you. Save your seed phrase — it&apos;s the only way to recover your wallet.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {walletAddress && (
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Wallet Address</Label>
+                <p className="font-mono text-sm break-all bg-muted p-2 rounded">{walletAddress}</p>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Seed Phrase (24 words)</Label>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <p className="font-mono text-sm break-all leading-relaxed">{seedPhrase}</p>
+              </div>
+              <p className="text-xs text-destructive font-medium mt-1">
+                ⚠️ Write this down and store it securely. This will NOT be shown again.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleCopySeedPhrase}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Seed Phrase
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSeedPhraseSaved}
+              >
+                I&apos;ve Saved It
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create Account</DialogTitle>
           <DialogDescription>
-            Sign up to start shopping and collecting NFTs
+            Sign up to start shopping and collecting NFTs. A Ripple wallet will be created for you automatically.
           </DialogDescription>
         </DialogHeader>
 
