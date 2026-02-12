@@ -87,7 +87,7 @@ export function SettingsTab() {
             Change Password
           </CardTitle>
           <CardDescription>
-            Update your admin password
+            Update your admin password. Changes apply immediately but update the ADMIN_PASSWORD environment variable for persistence across server restarts.
           </CardDescription>
         </CardHeader>
         <CardContent>

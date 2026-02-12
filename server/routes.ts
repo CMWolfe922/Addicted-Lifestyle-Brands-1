@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { timingSafeEqual } from "crypto";
 import multer from "multer";
 import bcrypt from "bcrypt";
 import session from "express-session";
@@ -808,14 +809,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const adminPassword = process.env.ADMIN_PASSWORD;
-    if (adminPassword !== currentPassword) {
+    if (!adminPassword || currentPassword.length !== adminPassword.length) {
       return res.status(401).json({ error: "Current password is incorrect" });
     }
 
-    // Update the password in the environment (runtime only)
+    const isMatch = timingSafeEqual(
+      Buffer.from(currentPassword),
+      Buffer.from(adminPassword)
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    // Update the password in the environment (runtime only — update ADMIN_PASSWORD env var for persistence)
     process.env.ADMIN_PASSWORD = newPassword;
 
-    res.json({ success: true, message: "Password changed successfully" });
+    res.json({ success: true, message: "Password changed successfully. Note: Update ADMIN_PASSWORD environment variable for persistence across restarts." });
   });
 
   // Printful product import endpoints (admin only)

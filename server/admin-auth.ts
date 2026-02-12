@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import session from "express-session";
+import crypto from "crypto";
 
 declare module "express-session" {
   interface SessionData {
@@ -23,7 +24,13 @@ export const requireAdminAuth = (req: Request, res: Response, next: NextFunction
 
 export const verifyAdminCredentials = (email: string, password: string): boolean => {
   const adminPassword = process.env.ADMIN_PASSWORD;
-  return email.toLowerCase() === ADMIN_EMAIL && adminPassword === password;
+  if (!adminPassword) return false;
+  const emailMatch = email.toLowerCase() === ADMIN_EMAIL;
+  const passwordMatch = crypto.timingSafeEqual(
+    Buffer.from(password),
+    Buffer.from(adminPassword.padEnd(password.length).slice(0, password.length))
+  );
+  return emailMatch && password.length === adminPassword.length && passwordMatch;
 };
 
 export const getAdminEmail = (): string => {
