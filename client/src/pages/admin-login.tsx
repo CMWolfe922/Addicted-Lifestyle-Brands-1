@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Lock } from "lucide-react";
+import { ShieldCheck, Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -17,10 +17,10 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!password) {
+    if (!email || !password) {
       toast({
-        title: "Password required",
-        description: "Please enter the admin password",
+        title: "Credentials required",
+        description: "Please enter your admin email and password",
         variant: "destructive",
       });
       return;
@@ -32,7 +32,7 @@ export default function AdminLogin() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
       
       if (!response.ok) {
@@ -48,7 +48,7 @@ export default function AdminLogin() {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Invalid password. Please try again.",
+        description: "Invalid credentials. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -64,10 +64,26 @@ export default function AdminLogin() {
             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
           <CardTitle className="font-display text-xl sm:text-2xl">Admin Portal</CardTitle>
-          <CardDescription className="text-sm">Enter your admin password to continue</CardDescription>
+          <CardDescription className="text-sm">Enter your admin credentials to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter admin email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-11"
+                  disabled={isLoading}
+                  data-testid="input-admin-email"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">

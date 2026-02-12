@@ -60,6 +60,8 @@ export const customers = pgTable("customers", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   password: text("password").notNull(),
+  walletAddress: text("wallet_address"),
+  encryptedSeedPhrase: text("encrypted_seed_phrase"),
   totalPurchases: numeric("total_purchases", { precision: 10, scale: 0 }).notNull().default("0"),
   totalSpent: numeric("total_spent", { precision: 10, scale: 2 }).notNull().default("0"),
   points: numeric("points", { precision: 10, scale: 0 }).notNull().default("0"),

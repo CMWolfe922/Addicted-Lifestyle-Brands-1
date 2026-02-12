@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Home, Users, Settings } from "lucide-react";
+import { Menu, Home, Users } from "lucide-react";
 import { NetworkStatus } from "./network-status";
 import { ThemeToggle } from "./theme-toggle";
 import { Link, useLocation } from "wouter";
@@ -17,7 +17,6 @@ export function MobileMenu({ networkConnected }: MobileMenuProps) {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/feed", label: "Community", icon: Users },
-    { href: "/admin", label: "Admin", icon: Settings },
   ];
 
   return (

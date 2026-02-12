@@ -12,7 +12,8 @@ import {
   insertEmployeeSchema,
 } from "../shared/schema";
 import { z } from "zod";
-import { requireAdminAuth, verifyAdminPassword } from "./admin-auth";
+import { requireAdminAuth, verifyAdminCredentials } from "./admin-auth";
+import { WalletService } from "./wallet-service";
 import { qrCodeGenerator } from "./services/qrcode-generator";
 import { imageComposer } from "./services/image-composer";
 import { printfulClient } from "./services/printful-client";
@@ -242,9 +243,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date_of_purchase: dateOfPurchase,
       });
 
-      // CRITICAL: Mint NFT to COMPANY wallet, not customer wallet
+      // Mint NFT to customer's wallet if available, otherwise company wallet
       const companyWalletSeed = process.env.COMPANY_XRP_WALLET_SEED;
       const companyWalletAddress = process.env.COMPANY_XRP_WALLET_ADDRESS;
+      const mintToWallet = customer?.walletAddress || companyWalletAddress;
 
       if (!companyWalletSeed || !companyWalletAddress) {
         console.error("Company XRP wallet not configured!");
@@ -253,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ error: "NFT minting configuration error" });
       }
 
-      // Mint NFT with company wallet as owner
+      // Mint NFT to customer wallet (or company wallet as fallback)
       const mintResult = await rippleService.mintNFT({
         barcodeId: uniqueBarcodeId,
         productName: product.name,
@@ -262,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalSold: currentSalesCount + 1,
         collectionName: "NFT Streetwear Collection",
         customerName: customer?.name || "Anonymous",
-        customerWallet: companyWalletAddress, // Mint to company wallet
+        customerWallet: mintToWallet || companyWalletAddress,
         purchaseId: transaction.id,
         dateOfPurchase,
         qrCodeImage: purchaseQRCode,
@@ -277,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (mintResult.success) {
         await storage.updateNFT(nft.id, {
           tokenId: mintResult.tokenId,
-          ownerWallet: companyWalletAddress, // Company wallet owns it
+          ownerWallet: mintToWallet || companyWalletAddress,
           transactionHash: mintResult.transactionHash,
           status: "minted",
           mintedAt: new Date(),
@@ -315,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nft: {
           tokenId: mintResult.tokenId,
           transactionHash: mintResult.transactionHash,
-          ownerWallet: companyWalletAddress,
+          ownerWallet: mintToWallet || companyWalletAddress,
           status: mintResult.success ? "minted" : "pending",
         },
         uniqueBarcodeId,
@@ -765,18 +767,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin authentication
   app.post("/api/admin/login", (req, res) => {
-    const { password } = req.body;
+    const { email, password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({ error: "Password required" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
     }
 
-    if (verifyAdminPassword(password)) {
+    if (verifyAdminCredentials(email, password)) {
       req.session.isAdminAuthenticated = true;
       return res.json({ success: true });
     }
 
-    res.status(401).json({ error: "Invalid password" });
+    res.status(401).json({ error: "Invalid credentials" });
   });
 
   app.post("/api/admin/logout", (req, res) => {
@@ -791,6 +793,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/check", (req, res) => {
     res.json({ authenticated: !!req.session.isAdminAuthenticated });
+  });
+
+  // Admin password change
+  app.post("/api/admin/change-password", requireAdminAuth, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current password and new password required" });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    }
+
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (adminPassword !== currentPassword) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    // Update the password in the environment (runtime only)
+    process.env.ADMIN_PASSWORD = newPassword;
+
+    res.json({ success: true, message: "Password changed successfully" });
   });
 
   // Printful product import endpoints (admin only)
@@ -1109,11 +1134,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create customer
+      // Generate Ripple wallet for the customer
+      const wallet = WalletService.generateWallet();
+
+      // Create customer with wallet
       const customer = await storage.createCustomer({
         email,
         password: hashedPassword,
         name,
+        walletAddress: wallet.xrpAddress,
+        encryptedSeedPhrase: wallet.encryptedSeedPhrase,
       });
 
       // Store customer ID in session and save explicitly
@@ -1126,9 +1156,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ error: "Session creation failed" });
         }
 
-        // Return customer data (no wallet generation - customers use PayPal for payments)
-        const { password: _, ...customerData } = customer;
-        res.json(customerData);
+        // Return customer data with wallet info (seed phrase shown once)
+        const { password: _, encryptedSeedPhrase: __, ...customerData } = customer;
+        res.json({
+          ...customerData,
+          seedPhrase: wallet.seedPhrase, // Show once during registration
+        });
       });
     } catch (error) {
       console.error("Registration error:", error);
@@ -1184,13 +1217,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ authenticated: false });
       }
 
-      const { password: _, ...customerData } = customer;
+      const { password: _, encryptedSeedPhrase: __, ...customerData } = customer;
       res.json({
         authenticated: true,
-        customer: {
-          ...customerData,
-          walletAddress: null, // Customers use PayPal, no XRP wallets
-        },
+        customer: customerData,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to get customer data" });

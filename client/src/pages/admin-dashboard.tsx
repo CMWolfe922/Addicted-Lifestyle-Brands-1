@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Package, UserCog, BarChart3, Heart, Tag, ShoppingBag } from "lucide-react";
+import { LogOut, Users, Package, UserCog, BarChart3, Heart, Tag, ShoppingBag, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CustomersTab } from "@/components/admin/customers-tab";
 import { ProductsTab } from "@/components/admin/products-tab";
@@ -12,6 +12,7 @@ import { MetricsTab } from "@/components/admin/metrics-tab";
 import { EngagementTab } from "@/components/admin/engagement-tab";
 import { CouponsTab } from "@/components/admin/coupons-tab";
 import { OrdersTab } from "@/components/admin/orders-tab";
+import { SettingsTab } from "@/components/admin/settings-tab";
 import type { AuthStatusResponse } from "@/types/api";
 
 export default function AdminDashboard() {
@@ -76,7 +77,7 @@ export default function AdminDashboard() {
 
       <main className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 overflow-y-auto">
         <Tabs defaultValue="metrics" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto">
+          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
             <TabsTrigger value="metrics" data-testid="tab-metrics" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Metrics</span>
@@ -104,6 +105,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="employees" data-testid="tab-employees" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <UserCog className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Employees</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" data-testid="tab-settings" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-2 py-2">
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Settings</span>
             </TabsTrigger>
           </TabsList>
 
@@ -133,6 +138,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="employees" className="space-y-4">
             <EmployeesTab />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <SettingsTab />
           </TabsContent>
         </Tabs>
       </main>

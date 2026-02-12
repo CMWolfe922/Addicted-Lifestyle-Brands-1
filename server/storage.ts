@@ -337,6 +337,8 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const customer: Customer = {
       ...insertCustomer,
+      walletAddress: insertCustomer.walletAddress ?? null,
+      encryptedSeedPhrase: insertCustomer.encryptedSeedPhrase ?? null,
       totalPurchases: "0",
       totalSpent: "0",
       points: "0",

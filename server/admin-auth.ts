@@ -7,6 +7,8 @@ declare module "express-session" {
   }
 }
 
+const ADMIN_EMAIL = "addictedlifestylebrands@gmail.com";
+
 export const isAdminSubdomain = (req: Request): boolean => {
   const host = req.get('host') || '';
   return host.startsWith('admin.');
@@ -19,7 +21,11 @@ export const requireAdminAuth = (req: Request, res: Response, next: NextFunction
   next();
 };
 
-export const verifyAdminPassword = (password: string): boolean => {
+export const verifyAdminCredentials = (email: string, password: string): boolean => {
   const adminPassword = process.env.ADMIN_PASSWORD;
-  return adminPassword === password;
+  return email.toLowerCase() === ADMIN_EMAIL && adminPassword === password;
+};
+
+export const getAdminEmail = (): string => {
+  return ADMIN_EMAIL;
 };
